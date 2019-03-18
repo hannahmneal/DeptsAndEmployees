@@ -19,7 +19,7 @@ namespace DapperDepartments.Data
             get
             {
                 // This is "address" of the database
-                string _connectionString = "Data Source=HNEAL-PC\\SQLEXPRESS;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+                string _connectionString = "Data Source=HNEAL-PC\\SQLEXPRESS;Initial Catalog=DepartmentsAndEmployees;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
                 return new SqlConnection(_connectionString);
             }
         }
