@@ -196,7 +196,7 @@ namespace DapperDepartments
         {
             Console.WriteLine();
             Console.Write("Press any key to continue...");
-            Console.ReadKey();
+            Console.Read();
             Console.WriteLine();
             Console.WriteLine();
         }
