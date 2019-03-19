@@ -18,16 +18,17 @@ namespace DapperDepartments
             Repository repository = new Repository();
 
             List<Department> departments = repository.GetAllDepartments();
+            // Think of "Department" (which is a type here) as if it were "string". If <string> is here (rather than <Department>), you would be able to access every property that the <string> type has. Props such as ToString, etc., are accessible by List because it is a list of the <string> type. So, every prop of <Department> is also accessible by List.
 
             // PrintDepartmentReport should print a department report to the console, but does it?
             //  Take a look at how it's defined below...
             PrintDepartmentReport("All Departments", departments);
 
             // What is this? Scroll to the bottom of the file and find out for yourself.
-            Pause();
+            Pause();            ///  ANSWER: Custom function that pauses execution of the console app until the user presses a key
 
 
-            // Create an new instance of a Department, so we can save our new department to the database.
+            // Create a new instance of a Department, so we can save our new department to the database.
             Department accounting = new Department { DeptName = "Accounting" };
             // Pass the accounting object as an argument to the repository's AddDepartment() method.
             repository.AddDepartment(accounting);
@@ -134,8 +135,6 @@ namespace DapperDepartments
 
         }
 
-
-
         /// <summary>
         ///  Prints a simple report with the given title and department information.
         /// </summary>
@@ -146,6 +145,9 @@ namespace DapperDepartments
         /// <param name="departments">Department data for the report</param>
         public static void PrintDepartmentReport(string title, List<Department> departments)
         {
+
+            Console.WriteLine(title, departments);
+
             /*
              * TODO: Complete this method
              *  For example a report entitled, "All Departments" should look like this:
@@ -155,6 +157,7 @@ namespace DapperDepartments
                 2: Engineering
                 3: Design
              */
+
         }
 
         /// <summary>
@@ -165,10 +168,12 @@ namespace DapperDepartments
         ///   Employee's ID, First Name, Last Name, 
         ///   and department name IF AND ONLY IF the department is not null.
         /// </remarks>
-        /// <param name="title">Title for the report</param>
-        /// <param name="employees">Employee data for the report</param>
+        ///<param name = "title" > "Employee Report" </ param >
+        ///< param name="employees">"Employee Information"</param>
         public static void PrintEmployeeReport(string title, List<Employee> employees)
         {
+
+            Console.WriteLine(title, employees);
             /*
              * TODO: Complete this method
              *  For example a report entitled, "All Employees", should look like this:

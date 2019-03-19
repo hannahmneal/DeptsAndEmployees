@@ -102,6 +102,7 @@ namespace DapperDepartments.Data
                 {
                     // String interpolation lets us inject the id passed into this method.
                     cmd.CommandText = $"SELECT DeptName FROM Department WHERE Id = {id}";
+                        // It isn't necessary to query the DeptName as well  (on line 104) because we are specifying the id, which will only be one department
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Department department = null;
@@ -113,6 +114,11 @@ namespace DapperDepartments.Data
                             DeptName = reader.GetString(reader.GetOrdinal("DeptName"))
                         };
                     }
+                    // How would we get a single department by id? 
+                        // 1. Open connection again
+                        // 2. Query
+                        // 3. Create variable with a value of null  called "newDepartment"
+                        // 4. We only expect one record with this specific id, so there's no need to do a while loop (which would go through all records until all were checked); therefore, we use a "if" loop.
 
                     reader.Close();
 
@@ -134,9 +140,12 @@ namespace DapperDepartments.Data
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     // More string interpolation
+
+                    // If this line were added here, it would open up the following lines to a SQL injection attack: //department.DeptName="foo'); DROP TABLE Department; --";
                     cmd.CommandText = $"INSERT INTO Department (DeptName) Values ('{department.DeptName}')";
                     cmd.ExecuteNonQuery();
-                }
+  // Here, we are creating an instance of our department class ("INSERT INTO"); It has passed the query checkpoint.
+              }
             }
 
             // when this method is finished we can look in the database and see the new department.
@@ -152,6 +161,8 @@ namespace DapperDepartments.Data
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+                    // SQL Parameters: protect against SQL Injection attacks:
+
                     // Here we do something a little different...
                     //  We're using a "parameterized" query to avoid SQL injection attacks.
                     //  First, we add variable names with @ signs in our SQL.
@@ -160,6 +171,8 @@ namespace DapperDepartments.Data
                                            SET DeptName = @deptName
                                          WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@deptName", department.DeptName));
+                    // "When you execute this command, pass over these values into the database as placeholders"
+                    // This will protect against SQL Injection attack.
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     // Maybe we should refactor our other SQL to use parameters
@@ -240,7 +253,26 @@ namespace DapperDepartments.Data
                      * TODO: Complete this method
                      */
 
-                    return null;
+                    cmd.CommandText = $"SELECT FirstName, LastName FROM Employee WHERE Id = {id}";
+                    // HN: How to include the DepartmentId in this query?
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    Employee employee = null; 
+                    if (reader.Read())
+                    {
+                        employee = new Employee
+                        {
+                            Id = id,
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName"))
+                        };
+                    }
+
+                    reader.Close();
+
+                    return employee;
+
+                    //return null;
                 }
             }
         }
@@ -263,11 +295,38 @@ namespace DapperDepartments.Data
                      *  Look at GetAllEmployeesWithDepartmentByDepartmentId(int departmentId) for inspiration.
                      */
 
+                    // HN: Code from GetAllEmployeesWithDepartmentByDepartmentId
+
+                    cmd.CommandText = @"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId,
+                                                d.DeptName
+                                           FROM Employee e INNER JOIN Department d ON e.DepartmentId = d.id";
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    List<Employee> employees = new List<Employee>();
+                    while (reader.Read())
+                    {
+                        Employee employee = new Employee
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            DepartmentId = reader.GetInt32(reader.GetOrdinal("DepartmentId")),
+                            Department = new Department
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("DepartmentId")),
+                                DeptName = reader.GetString(reader.GetOrdinal("DeptName"))
+                            }
+                        };
+
+                        employees.Add(employee);
+                    }
+
+                    reader.Close();
+
                     return null;
                 }
             }
         }
-
 
         /// <summary>
         ///  Get employees who are in the given department. Include the employee's department object.
@@ -281,7 +340,7 @@ namespace DapperDepartments.Data
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = $@"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId,
+                    cmd.CommandText = @"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId,
                                                 d.DeptName
                                            FROM Employee e INNER JOIN Department d ON e.DepartmentID = d.id
                                           WHERE d.id = @departmentId";
