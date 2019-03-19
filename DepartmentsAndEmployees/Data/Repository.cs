@@ -4,49 +4,42 @@ using DapperDepartments.Models;
 
 namespace DapperDepartments.Data
 {
-    /// <summary>
-    ///  An object to contain all database interactions.
-    /// </summary>
+    ///  An object to contain all database interactions:
+
     public class Repository
     {
-        /// <summary>
-        ///  Represents a connection to the database.
-        ///   This is a "tunnel" to connect the application to the database.
-        ///   All communication between the application and database passes through this connection.
-        /// </summary>
+        ///  Represents a connection b/w the application and the database:
+
         public SqlConnection Connection
         {
             get
             {
-                // This is "address" of the database
+                // This is "address" of the database:
                 string _connectionString = "Data Source=HNEAL-PC\\SQLEXPRESS;Initial Catalog=DepartmentsAndEmployees;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
                 return new SqlConnection(_connectionString);
             }
         }
 
-
         /************************************************************************************
-         * Departments
-         ************************************************************************************/
+                 * Departments
+        ************************************************************************************/
 
-        /// <summary>
-        ///  Returns a list of all departments in the database
-        /// </summary>
+        ///  Returns a list of all departments in the database:
+
         public List<Department> GetAllDepartments()
         {
             // We must "use" the database connection.
-            //  Because a database is a shared resource (other applications may be using it too) we must
-            //  be careful about how we interact with it. Specifically, we Open() connections when we need to 
-            //  interact with the database and we Close() them when we're finished.
-            //  In C#, a "using" block ensures we correctly disconnect from a resource even if there is an error.
-            //  For database connections, this means the connection will be properly closed.
+            //  Because a database is a shared resource (other applications may be using it too) we must be careful about how we interact with it. Specifically, we Open() connections when we need to interact with the database and we Close() them when we're finished.
+            //  In C#, a "using" block ensures we correctly disconnect from a resource even if there is an error. For database connections, this means the connection will be properly closed.
+
             using (SqlConnection conn = Connection)
             {
-                // Note, we must Open() the connection, the "using" block doesn't do that for us.
+            // Note, we must Open() the connection, the "using" block doesn't do that for us.
                 conn.Open();
 
-                // We must "use" commands too.
-                using (SqlCommand cmd = conn.CreateCommand())
+                // "SqlCommand cmd" declares a command object
+                            
+                using (SqlCommand cmd = conn.CreateCommand())   
                 {
                     // Here we setup the command with the SQL we want to execute before we execute it.
                     cmd.CommandText = "SELECT Id, DeptName FROM Department";
@@ -90,10 +83,11 @@ namespace DapperDepartments.Data
             }
         }
 
-        /// <summary>
+
         ///  Returns a single department with the given id.
-        /// </summary>
+
         public Department GetDepartmentById(int id)
+            // "Get" methods require a return statement at the end because they are getting items from the database.
         {
             using (SqlConnection conn = Connection)
             {
@@ -102,7 +96,7 @@ namespace DapperDepartments.Data
                 {
                     // String interpolation lets us inject the id passed into this method.
                     cmd.CommandText = $"SELECT DeptName FROM Department WHERE Id = {id}";
-                        // It isn't necessary to query the DeptName as well  (on line 104) because we are specifying the id, which will only be one department
+                    // It isn't necessary to query the DeptName as well  (on line 104) because we are specifying the id, which will only be one department
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Department department = null;
@@ -115,25 +109,27 @@ namespace DapperDepartments.Data
                         };
                     }
                     // How would we get a single department by id? 
-                        // 1. Open connection again
-                        // 2. Query
-                        // 3. Create variable with a value of null  called "newDepartment"
-                        // 4. We only expect one record with this specific id, so there's no need to do a while loop (which would go through all records until all were checked); therefore, we use a "if" loop.
+                    // 1. Open connection again
+                    // 2. Query
+                    // 3. Create variable with a value of null  called "newDepartment"
+                    // 4. We only expect one record with this specific id, so there's no need to do a while loop (which would go through all records until all were checked); therefore, we use a "if" loop.
 
                     reader.Close();
 
-                    return department;
+                    return department;  
+                    // Return statement because we got something from the database
                 }
             }
         }
 
-        /// <summary>
+
         ///  Add a new department to the database
-        ///   NOTE: This method sends data to the database, 
-        ///   it does not get anything from the database, so there is nothing to return.
-        /// </summary>
+        ///   NOTE: This method SENDS data to the database (it does not get anything from the database, so there is nothing to return).
+
         public void AddDepartment(Department department)
         {
+            // HN: Refactor your code to include parameters here in the "Department Add" section.
+
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
@@ -142,10 +138,25 @@ namespace DapperDepartments.Data
                     // More string interpolation
 
                     // If this line were added here, it would open up the following lines to a SQL injection attack: //department.DeptName="foo'); DROP TABLE Department; --";
-                    cmd.CommandText = $"INSERT INTO Department (DeptName) Values ('{department.DeptName}')";
-                    cmd.ExecuteNonQuery();
-  // Here, we are creating an instance of our department class ("INSERT INTO"); It has passed the query checkpoint.
-              }
+
+                    //cmd.CommandText = $"INSERT INTO Department (DeptName) Values ('{department.DeptName}')";  
+                    //HN: This ^^^ uses string interpolation to insert something, but we want to use parameters instead
+                    //cmd.ExecuteNonQuery();
+
+                    // Incorrect Example:
+                    //cmd.CommandText = @"INSERT INTO Department
+                    //                        SET DeptName = @deptName";
+                    //// HN: SET is only for "U" (UPDATE)!!! We are Adding!
+                    //cmd.Parameters.Add(new SqlParameter("@deptName", department.DeptName));
+                    ///////////   
+                    /// Correct: 
+                    cmd.CommandText = @"INSERT INTO Department (DeptName) Values (@deptName)";
+                    cmd.Parameters.Add(new SqlParameter("@deptName", department.DeptName));
+
+                    //cmd.ExecuteNonQuery();
+
+                    // Here, we are creating an instance of our department class ("INSERT INTO"); It has passed the query checkpoint (ExecuteNonQuery --> returns how many rows are affected).
+                }
             }
 
             // when this method is finished we can look in the database and see the new department.
@@ -163,10 +174,14 @@ namespace DapperDepartments.Data
                 {
                     // SQL Parameters: protect against SQL Injection attacks:
 
-                    // Here we do something a little different...
-                    //  We're using a "parameterized" query to avoid SQL injection attacks.
                     //  First, we add variable names with @ signs in our SQL.
                     //  Then, we add SqlParamters for each of those variables.
+
+            // Using parameterized queries is a three-step process:
+            //1. Construct the SqlCommand command string with parameters
+            //2. Declare a SqlParameter object, assigning values as needed
+            //3. Assign the SqlParameter object to the SqlCommand object's Parameters property
+
                     cmd.CommandText = @"UPDATE Department
                                            SET DeptName = @deptName
                                          WHERE Id = @id";
@@ -175,7 +190,7 @@ namespace DapperDepartments.Data
                     // This will protect against SQL Injection attack.
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
-                    // Maybe we should refactor our other SQL to use parameters
+                    // HN: Add parameters to the "DepartmentAdd" method
 
                     cmd.ExecuteNonQuery();
                 }
@@ -257,7 +272,7 @@ namespace DapperDepartments.Data
                     // HN: How to include the DepartmentId in this query?
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    Employee employee = null; 
+                    Employee employee = null;
                     if (reader.Read())
                     {
                         employee = new Employee
@@ -300,6 +315,9 @@ namespace DapperDepartments.Data
                     cmd.CommandText = @"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId,
                                                 d.DeptName
                                            FROM Employee e INNER JOIN Department d ON e.DepartmentId = d.id";
+
+                    // HN: Is an INNER JOIN necessary here? Since the tables were joined in the previous method?
+
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     List<Employee> employees = new List<Employee>();
@@ -380,12 +398,25 @@ namespace DapperDepartments.Data
         ///   it does not get anything from the database, so there is nothing to return.
         /// </summary>
         public void AddEmployee(Employee employee)
+        /*
+            HN: The only thing this method (AddEmployee in Repository.cs) cares about is adding an Employee object to the database; whatever file calls this method is the one that should be concerned with what is info is inserted into this Employee object. Here, we just have to ensure allowances are made for the properties the Employee object should have.
+         */
         {
             /*
              * TODO: Complete this method by using an INSERT statement with SQL
              *  Remember to use SqlParameters!
              */
 
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+  //                  employee.FirstName = "foo'); DROP TABLE Department; --";
+                    cmd.CommandText = $"INSERT INTO Employee (FirstName) Values ('{employee.FirstName}')";
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         /// <summary>
