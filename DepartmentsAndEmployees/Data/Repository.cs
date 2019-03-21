@@ -209,6 +209,7 @@ namespace DapperDepartments.Data
         // 6. UpdateEmployee(int id, Employee employee);
         // 7. DeleteEmployee(int id);
 
+/******************************************************************************/
         //NOTE: Here they are again with more details:
         //  1. GetAllEmployees(); 
         // SELECT - FROM        return (public)
@@ -316,7 +317,7 @@ namespace DapperDepartments.Data
 //NOTE: SELECT - FROM --- INNER JOIN/JOIN - ON
 
         //(^_^)   Get all employees along with their departments
-        //Note: This is really important!!!This shows how to dispaly information for one object that is in an independent dataset/table from another object, 
+        //Note: This is really important!!!This shows how to display information for one object that is in an independent dataset/table from another object, 
         //(^_^) A list of employees in which each employee object contains their department object.
 
         public List<Employee> GetAllEmployeesWithDepartment()
@@ -381,11 +382,18 @@ namespace DapperDepartments.Data
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId,
-                                                d.DeptName
-                                           FROM Employee e INNER JOIN Department d ON e.DepartmentID = d.id
-                                          WHERE d.id = @departmentId";
+                    //NOTE: The equivalent SQL syntax for the query below is:
+                    /*
+                                        SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId, d.DeptName FROM Employee e INNER JOIN Department d ON e.DepartmentId = d.id
+                                        */
+
+                    cmd.CommandText = @"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId, d.DeptName
+                                        FROM Employee e 
+                                        INNER JOIN Department d 
+                                        ON e.DepartmentId = d.id
+                                        WHERE d.id = @departmentId";
                     cmd.Parameters.Add(new SqlParameter("@departmentId", departmentId));
+
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     List<Employee> employees = new List<Employee>();
@@ -462,14 +470,10 @@ namespace DapperDepartments.Data
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"UPDATE Employee
-                                        SET FirstName = @FirstName, 
-                                            LastName = @LastName,
-                                            DepartmentId = @DepartmentId,
-                                            Id = @id
+                                        SET DepartmentId = @DepartmentId
                                         WHERE Id = @id";
-                    cmd.Parameters.Add(new SqlParameter("@FirstName", employee.FirstName));
-                    cmd.Parameters.Add(new SqlParameter("@LastName", employee.LastName));
                     cmd.Parameters.Add(new SqlParameter("@DepartmentId", employee.DepartmentId));
+
                     cmd.Parameters.Add(new SqlParameter("@id", id));
 
                     cmd.ExecuteNonQuery();

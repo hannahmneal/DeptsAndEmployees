@@ -128,7 +128,7 @@ namespace DapperDepartments
             repository.DeleteEmployee(dbJane.Id);
             employees = repository.GetAllEmployeesWithDepartment();
 
-            PrintEmployeeReport("All Employees after updating Jane", employees);
+            PrintEmployeeReport("All Employees after deleting duplicate Jane", employees);
 
             Pause();
         }
@@ -168,18 +168,17 @@ namespace DapperDepartments
         {
 
             Console.WriteLine(title);
-            //Console.WriteLine(employees);
+
             foreach (Employee employee in employees)
             {
-                //Console.WriteLine(employee);
 
                 if (employee.Department != null)
                 {
-                    Console.WriteLine($"Employee Report if employee dept is not null: {employee.Id}: {employee.FirstName} {employee.LastName}, {employee.Department.DeptName}");
+                    Console.WriteLine($"{employee.Id}: {employee.FirstName} {employee.LastName}, {employee.Department.DeptName}");
 
-                }else
+                } else
                 {
-                    Console.WriteLine($"Employee report if employee dept is null: {employee.Id}: {employee.FirstName} {employee.LastName}");
+                    Console.WriteLine($"{employee.Id}: {employee.FirstName} {employee.LastName}");
                 }
             }
 
