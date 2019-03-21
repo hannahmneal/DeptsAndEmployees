@@ -4,99 +4,116 @@ using DapperDepartments.Models;
 
 namespace DapperDepartments.Data
 {
-    ///  An object to contain all database interactions:
+
+    // COMMENTS KEY:
+
+    //(^_^) Important Comment: For Notes To/From Users other than myself (instructional staff, employers, etc.)
+    //NOTE:  Notes to myself
+    //? Questions
+    //x Strikethrough
 
     public class Repository
     {
-        ///  Represents a connection b/w the application and the database:
 
         public SqlConnection Connection
         {
             get
             {
-                // This is "address" of the database:
                 string _connectionString = "Data Source=HNEAL-PC\\SQLEXPRESS;Initial Catalog=DepartmentsAndEmployees;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
                 return new SqlConnection(_connectionString);
             }
         }
 
-        /************************************************************************************
-                 * Departments
-        ************************************************************************************/
+        /*****************************************************************
+                                 * Departments
+        ******************************************************************/
 
-        ///  Returns a list of all departments in the database:
+        //NOTE: This section contains 5 methods. They are (in order):
+
+            // 1. GetAllDepartments();         
+            //  SELECT - FROM       return (public)
+
+            // 2. GetDepartmentById(int id);        
+            //  SELECT - FROM - WHERE       return (public)
+
+            // 3. AddDepartment(Department department);     
+            //  INSERT INTO      cmd.ExecuteNonQuery(); (public void)
+
+            // 4. UpdateDepartment(int id, Department department);      
+            //  UPDATE - SET - WHERE        cmd.ExecuteNonQuery(); (public void)
+
+            // 5. DeleteDepartment(int id);    
+            //  DELETE FROM - WHERE    cmd.ExecuteNonQuery(); (public void)
+
+/*=============================        GET ALL          ===================================*/
+        //NOTE: Get = return statement
+        //NOTE: SELECT - FROM 
+
+        //(^_^)   Returns a list of all departments in the database:
 
         public List<Department> GetAllDepartments()
         {
-            // We must "use" the database connection.
-            //  Because a database is a shared resource (other applications may be using it too) we must be careful about how we interact with it. Specifically, we Open() connections when we need to interact with the database and we Close() them when we're finished.
-            //  In C#, a "using" block ensures we correctly disconnect from a resource even if there is an error. For database connections, this means the connection will be properly closed.
-
             using (SqlConnection conn = Connection)
             {
-            // Note, we must Open() the connection, the "using" block doesn't do that for us.
                 conn.Open();
-
-                // "SqlCommand cmd" declares a command object
-                            
                 using (SqlCommand cmd = conn.CreateCommand())   
                 {
-                    // Here we setup the command with the SQL we want to execute before we execute it.
+                    //(^_^)  Here we setup the command with the SQL we want to execute before we execute it:
                     cmd.CommandText = "SELECT Id, DeptName FROM Department";
 
-                    // Execute the SQL in the database and get a "reader" that will give us access to the data.
+                    //(^_^)  Execute the SQL in the database and get a "reader" that will give us access to the data.
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    // A list to hold the departments we retrieve from the database.
                     List<Department> departments = new List<Department>();
 
-                    // Read() will return true if there's more data to read
                     while (reader.Read())
                     {
-                        // The "ordinal" is the numeric position of the column in the query results.
-                        //  For our query, "Id" has an ordinal value of 0 and "DeptName" is 1.
                         int idColumnPosition = reader.GetOrdinal("Id");
-
-                        // We user the reader's GetXXX methods to get the value for a particular ordinal.
                         int idValue = reader.GetInt32(idColumnPosition);
 
                         int deptNameColumnPosition = reader.GetOrdinal("DeptName");
                         string deptNameValue = reader.GetString(deptNameColumnPosition);
 
-                        // Now let's create a new department object using the data from the database.
+                        //(^_^)  Now let's create a new department object using the data from the database and add that department object to our list.
                         Department department = new Department
                         {
                             Id = idValue,
                             DeptName = deptNameValue
                         };
-
-                        // ...and add that department object to our list.
                         departments.Add(department);
                     }
-
-                    // We should Close() the reader. Unfortunately, a "using" block won't work here.
                     reader.Close();
 
-                    // Return the list of departments who whomever called this method.
                     return departments;
                 }
             }
         }
+/*==========================         GET (SPECIFIC)          ===============================*/
+//NOTE: Get = return statement
+//NOTE: SELECT - FROM - WHERE
 
-
-        ///  Returns a single department with the given id.
+        //(^_^)   Returns a single department with the given id.
 
         public Department GetDepartmentById(int id)
-            // "Get" methods require a return statement at the end because they are getting items from the database.
         {
+
+        //NOTE: 
+        /*
+                                // How would we get a single department by id? 
+                                // 1. Open connection again
+                                // 2. Query
+                                // 3. Create variable with a value of null  called "newDepartment"
+                                // 4. We only expect one record with this specific id, so there's no need to do a while loop (which would go through all records until all were checked); therefore, we use a "if" loop.
+                                */
+
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    // String interpolation lets us inject the id passed into this method.
+                    // (^_^) String interpolation lets us inject the id passed into this method.
                     cmd.CommandText = $"SELECT DeptName FROM Department WHERE Id = {id}";
-                    // It isn't necessary to query the DeptName as well  (on line 104) because we are specifying the id, which will only be one department
+                    //(^_^)  It isn't necessary to query the DeptName as well  because we are specifying the id, which will only be one department
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Department department = null;
@@ -108,63 +125,44 @@ namespace DapperDepartments.Data
                             DeptName = reader.GetString(reader.GetOrdinal("DeptName"))
                         };
                     }
-                    // How would we get a single department by id? 
-                    // 1. Open connection again
-                    // 2. Query
-                    // 3. Create variable with a value of null  called "newDepartment"
-                    // 4. We only expect one record with this specific id, so there's no need to do a while loop (which would go through all records until all were checked); therefore, we use a "if" loop.
 
                     reader.Close();
 
-                    return department;  
-                    // Return statement because we got something from the database
+                    return department;
                 }
             }
         }
+/*================================         ADD          ================================*/
+//NOTE: INSERT INTO
 
-
-        ///  Add a new department to the database
-        ///   NOTE: This method SENDS data to the database (it does not get anything from the database, so there is nothing to return).
+        //(^_^)   Add a new department to the database
 
         public void AddDepartment(Department department)
         {
-            // HN: Refactor your code to include parameters here in the "Department Add" section.
-
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    // More string interpolation
 
-                    // If this line were added here, it would open up the following lines to a SQL injection attack: //department.DeptName="foo'); DROP TABLE Department; --";
-
+                    //NOTE: Incorrect (no SQL params):
                     //cmd.CommandText = $"INSERT INTO Department (DeptName) Values ('{department.DeptName}')";  
-                    //HN: This ^^^ uses string interpolation to insert something, but we want to use parameters instead
                     //cmd.ExecuteNonQuery();
+                    //This ^^^ uses string interpolation to insert something, but we want to use parameters instead
 
-                    // Incorrect Example:
-                    //cmd.CommandText = @"INSERT INTO Department
-                    //                        SET DeptName = @deptName";
-                    //// HN: SET is only for "U" (UPDATE)!!! We are Adding!
-                    //cmd.Parameters.Add(new SqlParameter("@deptName", department.DeptName));
-                    ///////////   
-                    /// Correct: 
+                    //NOTE: Correct: 
                     cmd.CommandText = @"INSERT INTO Department (DeptName) Values (@deptName)";
                     cmd.Parameters.Add(new SqlParameter("@deptName", department.DeptName));
 
-                    //cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();
 
-                    // Here, we are creating an instance of our department class ("INSERT INTO"); It has passed the query checkpoint (ExecuteNonQuery --> returns how many rows are affected).
+                    //(^_^)  Here, we are creating an instance of our department class ("INSERT INTO"); It has passed the query checkpoint (ExecuteNonQuery --> returns how many rows are affected).
                 }
             }
-
-            // when this method is finished we can look in the database and see the new department.
         }
+/*===============================         UPDATE          ===============================*/
+//NOTE: UPDATE - SET - WHERE
 
-        /// <summary>
-        ///  Updates the department with the given id
-        /// </summary>
         public void UpdateDepartment(int id, Department department)
         {
             using (SqlConnection conn = Connection)
@@ -172,35 +170,19 @@ namespace DapperDepartments.Data
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    // SQL Parameters: protect against SQL Injection attacks:
-
-                    //  First, we add variable names with @ signs in our SQL.
-                    //  Then, we add SqlParamters for each of those variables.
-
-            // Using parameterized queries is a three-step process:
-            //1. Construct the SqlCommand command string with parameters
-            //2. Declare a SqlParameter object, assigning values as needed
-            //3. Assign the SqlParameter object to the SqlCommand object's Parameters property
-
                     cmd.CommandText = @"UPDATE Department
                                            SET DeptName = @deptName
                                          WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@deptName", department.DeptName));
-                    // "When you execute this command, pass over these values into the database as placeholders"
-                    // This will protect against SQL Injection attack.
                     cmd.Parameters.Add(new SqlParameter("@id", id));
-
-                    // HN: Add parameters to the "DepartmentAdd" method
 
                     cmd.ExecuteNonQuery();
                 }
             }
         }
+/*==============================         DELETE          ================================*/
+//NOTE: DELETE FROM - WHERE
 
-
-        /// <summary>
-        ///  Delete the department with the given id
-        /// </summary>
         public void DeleteDepartment(int id)
         {
             using (SqlConnection conn = Connection)
@@ -215,10 +197,43 @@ namespace DapperDepartments.Data
             }
         }
 
+/****************************************************************************
+                                 * Employees
+                            ******************************************************************************/
+        //NOTE :This section contains 7 methods. They are (in order):
+        //  1. GetAllEmployees(); 
+        // 2. GetEmployeeById(int id);
+        // 3.  GetAllEmployeesWithDepartment();
+        // 4. GetAllEmployeesWithDepartmentByDepartmentId(int departmentId);
+        // 5. AddEmployee(Employee employee);
+        // 6. UpdateEmployee(int id, Employee employee);
+        // 7. DeleteEmployee(int id);
 
-        /************************************************************************************
-         * Employees
-         ************************************************************************************/
+        //NOTE: Here they are again with more details:
+        //  1. GetAllEmployees(); 
+        // SELECT - FROM        return (public)
+
+        // 2. GetEmployeeById(int id);
+        // SELECT - FROM - WHERE    return (public)
+
+        // 3.  GetAllEmployeesWithDepartment();
+        // SELECT - FROM --- INNER JOIN/JOIN - ON       return (public)
+
+        // 4. GetAllEmployeesWithDepartmentByDepartmentId(int departmentId);
+        // SELECT - FROM - WHERE    return (public)
+
+        // 5. AddEmployee(Employee employee);
+        // INSERT INTO     cmd.ExecuteNonQuery();  (public void)
+
+        // 6. UpdateEmployee(int id, Employee employee);
+        // UPDATE - SET - WHERE     cmd.ExecuteNonQuery();  (public void)
+
+        // 7. DeleteEmployee(int id);
+        // DELETE - FROM - WHERE    cmd.ExecuteNonQuery();      (public void)
+
+/*=============================         GET ALL         ===================================*/
+//NOTE: Get = return statement
+//NOTE: SELECT - FROM
 
         public List<Employee> GetAllEmployees()
         {
@@ -239,23 +254,25 @@ namespace DapperDepartments.Data
                             FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
                             DepartmentId = reader.GetInt32(reader.GetOrdinal("DepartmentId"))
+
+                            //? Could the value of the text in the firstName column also be accessed with bracket notation, as with lists and dictionaries?
                         };
 
                         employees.Add(employee);
                     }
 
                     reader.Close();
-
                     return employees;
                 }
             }
         }
 
-        /// <summary>
-        ///  Get an individual employee by id
-        /// </summary>
-        /// <param name="id">The employee's id</param>
-        /// <returns>The employee that with the given id</returns>
+/*==========================         GET (SPECIFIC)          ===============================*/
+//NOTE: Get = return statement
+//NOTE: SELECT - FROM - WHERE
+        
+        //(^_^)   Returns a single employee with a given id
+
         public Employee GetEmployeeById(int id)
         {
             using (SqlConnection conn = Connection)
@@ -265,11 +282,13 @@ namespace DapperDepartments.Data
                 {
 
                     /*
-                     * TODO: Complete this method
+                     * TODO: Complete this method with SQL parameters
                      */
 
                     cmd.CommandText = $"SELECT FirstName, LastName FROM Employee WHERE Id = {id}";
-                    // HN: How to include the DepartmentId in this query?
+                    
+                    //NOTE: It is not necessary to include the DepartmentId in this GET because we are following the SOLID principles; This method only retrieves an employee by their id. The employee and their department are called in the "ADD" method  (GetAllEmployeesByDepartment) right after this GET.
+                
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Employee employee = null;
@@ -286,17 +305,20 @@ namespace DapperDepartments.Data
                     reader.Close();
 
                     return employee;
-
-                    //return null;
+                    //return null; 
+                    //? When am I supposed to return null??
                 }
             }
         }
 
+ /*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!         GET WITH DEPT          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+//NOTE: Get = return statement
+//NOTE: SELECT - FROM --- INNER JOIN/JOIN - ON
 
-        /// <summary>
-        ///  Get all employees along with their departments
-        /// </summary>
-        /// <returns>A list of employees in which each employee object contains their department object.</returns>
+        //(^_^)   Get all employees along with their departments
+        //Note: This is really important!!!This shows how to dispaly information for one object that is in an independent dataset/table from another object, 
+        //(^_^) A list of employees in which each employee object contains their department object.
+
         public List<Employee> GetAllEmployeesWithDepartment()
         {
             using (SqlConnection conn = Connection)
@@ -305,18 +327,16 @@ namespace DapperDepartments.Data
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
 
-                    /*
+          /*
                      * TODO: Complete this method
                      *  Look at GetAllEmployeesWithDepartmentByDepartmentId(int departmentId) for inspiration.
                      */
 
-                    // HN: Code from GetAllEmployeesWithDepartmentByDepartmentId
+            // NOTE: Code from GetAllEmployeesWithDepartmentByDepartmentId
 
                     cmd.CommandText = @"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId,
                                                 d.DeptName
                                            FROM Employee e INNER JOIN Department d ON e.DepartmentId = d.id";
-
-                    // HN: Is an INNER JOIN necessary here? Since the tables were joined in the previous method?
 
                     SqlDataReader reader = cmd.ExecuteReader();
 
@@ -341,16 +361,19 @@ namespace DapperDepartments.Data
 
                     reader.Close();
 
-                    return null;
+                    return employees;
                 }
             }
         }
 
-        /// <summary>
-        ///  Get employees who are in the given department. Include the employee's department object.
-        /// </summary>
-        /// <param name="departmentId">Only include employees in this department</param>
-        /// <returns>A list of employees in which each employee object contains their department object.</returns>
+/*=======================       GET BY SPECIFIC DEPARTMENT         =====================*/
+//NOTE: SELECT - FROM - WHERE
+
+        //(^_^)  Get employees who are in the given department. Include the employee's department object.
+        //(^_^) <param name="departmentId">Only include employees in this department</param>
+        //(^_^)A list of employees in which each employee object contains their department object.
+
+
         public List<Employee> GetAllEmployeesWithDepartmentByDepartmentId(int departmentId)
         {
             using (SqlConnection conn = Connection)
@@ -391,18 +414,18 @@ namespace DapperDepartments.Data
             }
         }
 
+/*===================================         ADD          ==================================*/
+//NOTE: INSERT INTO
 
-        /// <summary>
-        ///  Add a new employee to the database
-        ///   NOTE: This method sends data to the database, 
-        ///   it does not get anything from the database, so there is nothing to return.
-        /// </summary>
+        //(^_^)   Add a new employee to the database
+        //(^_^)    NOTE: This method sends data to the database; it does not get anything from the database, so there is nothing to return.
+
         public void AddEmployee(Employee employee)
-        /*
-            HN: The only thing this method (AddEmployee in Repository.cs) cares about is adding an Employee object to the database; whatever file calls this method is the one that should be concerned with what is info is inserted into this Employee object. Here, we just have to ensure allowances are made for the properties the Employee object should have.
-         */
+    
+    //NOTE: The only thing this method (AddEmployee in Repository.cs) cares about is adding an Employee object to the database; whatever file calls this method is the one that should be concerned with what is info is inserted into this Employee object. Here, we just have to ensure allowances are made for the properties the Employee object has.
+
         {
-            /*
+        /*
              * TODO: Complete this method by using an INSERT statement with SQL
              *  Remember to use SqlParameters!
              */
@@ -412,34 +435,70 @@ namespace DapperDepartments.Data
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-  //                  employee.FirstName = "foo'); DROP TABLE Department; --";
-                    cmd.CommandText = $"INSERT INTO Employee (FirstName) Values ('{employee.FirstName}')";
+
+                    cmd.CommandText = $"INSERT INTO Employee (FirstName, LastName, DepartmentId) Values (@FirstName, @LastName, @DepartmentId)";
+
+                    cmd.Parameters.Add(new SqlParameter("@FirstName", employee.FirstName));
+
+                    cmd.Parameters.Add(new SqlParameter("@LastName", employee.LastName));
+
+                    cmd.Parameters.Add(new SqlParameter("@DepartmentId", employee.DepartmentId));
+
                     cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        /// <summary>
-        ///  Updates the employee with the given id
-        /// </summary>
+/*===============================         UPDATE          ===============================*/
+//NOTE: UPDATE - SET - WHERE
+
+        //(^_^)   Updates the employee of the given id
+
         public void UpdateEmployee(int id, Employee employee)
         {
-            /*
-             * TODO: Complete this method using an UPDATE statement with SQL
-             *  Remember to use SqlParameters!
-             */
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"UPDATE Employee
+                                        SET FirstName = @FirstName, 
+                                            LastName = @LastName,
+                                            DepartmentId = @DepartmentId,
+                                            Id = @id
+                                        WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@FirstName", employee.FirstName));
+                    cmd.Parameters.Add(new SqlParameter("@LastName", employee.LastName));
+                    cmd.Parameters.Add(new SqlParameter("@DepartmentId", employee.DepartmentId));
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
         }
 
+/*==============================         DELETE          ================================*/
+//NOTE: DELETE FROM - WHERE
 
-        /// <summary>
-        ///  Delete the employee with the given id
-        /// </summary>
+        //(^_^)   Delete the employee with the given id
+
         public void DeleteEmployee(int id)
         {
             /*
              * TODO: Complete this method using a DELETE statement with SQL
              *  Remember to use SqlParameters!
              */
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "DELETE FROM Employee WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
     }
 }

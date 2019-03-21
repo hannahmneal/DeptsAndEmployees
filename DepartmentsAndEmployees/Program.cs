@@ -8,27 +8,37 @@ namespace DapperDepartments
 {
     class Program
     {
-        ///  The Main method is the starting point for a .net application.
+        // COMMENTS KEY:
+
+        //(^_^) Important Comment: For Notes To/From Users other than myself (instructional staff, employers, etc.)
+        //NOTE Notes to myself
+        //? Questions
+        //x Strikethrough
+
+
+
+        //(^_^)  The Main method is the starting point for a .net application.
 
         static void Main(string[] args)
         {
-            // We must create an instance of the Repository class in order to use it's methods to interact with the database.
+            // (^_^)We must create an instance of the Repository class in order to use it's methods to interact with the database.
+
             Repository repository = new Repository();
 
             List<Department> departments = repository.GetAllDepartments();
-            // Think of "Department" (which is a type here) as if it were "string". If <string> is here (rather than <Department>), you would be able to access every property that the <string> type has. Props such as ToString, etc., are accessible by List because it is a list of the <string> type. So, every prop of <Department> is also accessible by List.
+            //NOTE Think of "Department" (which is a type here) as if it were "string". If <string> is here (rather than <Department>), you would be able to access every property that the <string> type has. Props such as ToString, etc., are accessible by List because it is a list of the <string> type. So, every prop of <Department> is also accessible by List.
 
-            // PrintDepartmentReport should print a department report to the console, but does it? Take a look at how it's defined below...
+            //(^_^) PrintDepartmentReport should print a department report to the console, but does it? Take a look at how it's defined below...
 
             PrintDepartmentReport("All Departments", departments);
 
-            // This is a custom function that pauses execution of the console app until the user presses a key:
+            //(^_^)  This is a custom function that pauses execution of the console app until the user presses a key:
 
-            Pause();            
+            Pause();
 
-            // Create a new instance of a Department, so we can save our new department to the database.
+            //(^_^)  Create a new instance of a Department, so we can save our new department to the database.
             Department accounting = new Department { DeptName = "Accounting" };
-            // Pass the accounting object as an argument to the repository's AddDepartment() method.
+            // (^_^) Pass the accounting object as an argument to the repository's AddDepartment() method.
             repository.AddDepartment(accounting);
 
             departments = repository.GetAllDepartments();
@@ -36,18 +46,18 @@ namespace DapperDepartments
 
             Pause();
 
-            // Pull the object that represents the Accounting department from the list of departments that
-            //  we got from the database.
-            // First() is a handy LINQ method that gives us the first element in a list that matches the condition.
+            //(^_^)  Pull the object that represents the Accounting department from the list of departments that we got from the database.
+            // (^_^) First() is a handy LINQ method that gives us the first element in a list that matches the condition.
             Department accountingDepartmentFromDB = departments.First(d => d.DeptName == "Accounting");
 
-            // How are the "accounting" and "accountingDepartmentFromDB" objects different? Why are they different?
+            //(^_^)  How are the "accounting" and "accountingDepartmentFromDB" objects different? Why are they different?
+
             Console.WriteLine($"                accounting --> {accounting.Id}: {accounting.DeptName}");
             Console.WriteLine($"accountingDepartmentFromDB --> {accountingDepartmentFromDB.Id}: {accountingDepartmentFromDB.DeptName}");
 
             Pause();
 
-            // Change the name of the Accounting department and save the change to the database.
+            //(^_^)  Change the name of the Accounting department and save the change to the database.
             accountingDepartmentFromDB.DeptName = "Creative Accounting";
             repository.UpdateDepartment(accountingDepartmentFromDB.Id, accountingDepartmentFromDB);
 
@@ -57,7 +67,7 @@ namespace DapperDepartments
             Pause();
 
 
-            // Maybe we don't need an Accounting department after all...
+            //(^_^)  Maybe we don't need an Accounting department after all...
             repository.DeleteDepartment(accountingDepartmentFromDB.Id);
 
             departments = repository.GetAllDepartments();
@@ -65,10 +75,10 @@ namespace DapperDepartments
 
             Pause();
 
-            // Create a new variable to contain a list of Employees and get that list from the database
+            //(^_^)  Create a new variable to contain a list of Employees and get that list from the database
             List<Employee> employees = repository.GetAllEmployees();
 
-// Does this method do what it claims to do, or does it need some work?
+            //(^_^)  Does this method do what it claims to do, or does it need some work?
             PrintEmployeeReport("All Employees", employees);
 
             Pause();
@@ -78,7 +88,7 @@ namespace DapperDepartments
 
             Pause();
 
-            // Here we get the first department by index. (We could use First() here without passing it a condition, but using the index is easy enough.)
+            //(^_^)  Here we get the first department by index. (We could use First() here without passing it a condition, but using the index is easy enough.)
 
             Department firstDepartment = departments[0];
             employees = repository.GetAllEmployeesWithDepartmentByDepartmentId(firstDepartment.Id);
@@ -86,8 +96,8 @@ namespace DapperDepartments
 
             Pause();
 
-            // Instantiate a new employee object.
-            //  Note we are making the employee's DepartmentId refer to an existing department. This is important because if we use an invalid department id, we won't be able to save the new employee record to the database because of a foreign key constraint violation:
+            // (^_^) Instantiate a new employee object.
+            // (^_^)  Note we are making the employee's DepartmentId refer to an existing department. This is important because if we use an invalid department id, we won't be able to save the new employee record to the database because of a foreign key constraint violation:
             Employee jane = new Employee
             {
                 FirstName = "Jane",
@@ -101,10 +111,10 @@ namespace DapperDepartments
 
             Pause();
 
-            // Once again, we see First() in action.
+            //(^_^)  Once again, we see First() in action.
             Employee dbJane = employees.First(e => e.FirstName == "Jane");
 
-            // Get the second department by index.
+            //(^_^)  Get the second department by index.
             Department secondDepartment = departments[1];
 
             dbJane.DepartmentId = secondDepartment.Id;
@@ -115,31 +125,20 @@ namespace DapperDepartments
 
             Pause();
 
-
             repository.DeleteEmployee(dbJane.Id);
             employees = repository.GetAllEmployeesWithDepartment();
 
             PrintEmployeeReport("All Employees after updating Jane", employees);
 
             Pause();
-
         }
 
-        /// <summary>
-        ///  Prints a simple report with the given title and department information.
-        /// </summary>
-        /// <remarks>
-        ///  Each line of the report should include the Department's ID and Name
-        /// </remarks>
-        /// <param name="title">Title for the report</param>
-        /// <param name="departments">Department data for the report</param>
+        //(^_^)   Prints a simple report with the given title and department information.
+        //(^_^)  Each line of the report should include the Department's ID and Name
+        //(^_^) <param name="title">Title for the report</param>
+        //(^_^)  <param name="departments">Department data for the report</param>
         public static void PrintDepartmentReport(string title, List<Department> departments)
         {
-            Console.WriteLine(title);
-            foreach(Department dept in departments)
-            {
-                Console.WriteLine($"{dept.Id}: {dept.DeptName}");
-            }
 
             /*
              * TODO: Complete this method
@@ -150,23 +149,40 @@ namespace DapperDepartments
                 2: Engineering
                 3: Design
              */
+            Console.WriteLine(title);
+            foreach (Department dept in departments)
+            {
+                Console.WriteLine($"All departments report: {dept.Id}: {dept.DeptName}");
+            }
 
         }
 
-        /// <summary>
-        ///  Prints a simple report with the given title and employee information.
-        /// </summary>
-        /// <remarks>
-        ///  Each line of the report should include the 
-        ///   Employee's ID, First Name, Last Name, 
-        ///   and department name IF AND ONLY IF the department is not null.
-        /// </remarks>
-        ///<param name = "title" > "Employee Report" </ param >
-        ///< param name="employees">"Employee Information"</param>
+        //(^_^)   Prints a simple report with the given title and employee information.
+
+        //(^_^)   Each line of the report should include the 
+        //(^_^)    Employee's ID, First Name, Last Name, and department name IF AND ONLY IF the department is not null.
+
+        //(^_^)<param name = "title" > "Employee Report" </ param >
+        //(^_^) < param name="employees">"Employee Information"</param>
         public static void PrintEmployeeReport(string title, List<Employee> employees)
         {
 
-            Console.WriteLine(title, employees);
+            Console.WriteLine(title);
+            //Console.WriteLine(employees);
+            foreach (Employee employee in employees)
+            {
+                //Console.WriteLine(employee);
+
+                if (employee.Department != null)
+                {
+                    Console.WriteLine($"Employee Report if employee dept is not null: {employee.Id}: {employee.FirstName} {employee.LastName}, {employee.Department.DeptName}");
+
+                }else
+                {
+                    Console.WriteLine($"Employee report if employee dept is null: {employee.Id}: {employee.FirstName} {employee.LastName}");
+                }
+            }
+
             /*
              * TODO: Complete this method
              *  For example a report entitled, "All Employees", should look like this:
@@ -186,10 +202,8 @@ namespace DapperDepartments
              */
         }
 
+        //(^_^)   Custom function that pauses execution of the console app until the user presses a key
 
-        /// <summary>
-        ///  Custom function that pauses execution of the console app until the user presses a key
-        /// </summary>
         public static void Pause()
         {
             Console.WriteLine();
